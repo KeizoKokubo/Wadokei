@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>和時計 ― 不定時法シミュレーター</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236b3f2a'/%3E%3Ccircle cx='50' cy='50' r='36' fill='%23f3ead9'/%3E%3Cline x1='50' y1='50' x2='50' y2='20' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='50' y1='50' x2='68' y2='58' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="washi-bg"></div>
+
+<header class="site-header">
+  <h1>和時計 <span class="sub">― 不定時法シミュレーター ―</span></h1>
+  <p class="lead">江戸の空は、時計の針が決めるのではなく、太陽が決めていた。</p>
+</header>
+
+<main class="layout">
+
+  <section class="clock-panel">
+    <div class="clock-frame">
+      <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
+    </div>
+    <p class="clock-caption">割駒式文字盤 ― 目盛りの駒が季節ごとに動きます</p>
+  </section>
+
+  <section class="info-panel">
+
+    <div class="card current-koku">
+      <h2>いま、この刻</h2>
+      <div class="koku-display">
+        <span id="kokuBell" class="koku-bell">―</span>
+        <span id="kokuEto" class="koku-eto">―</span>
+      </div>
+      <p id="kokuReading" class="koku-reading">―</p>
+      <p class="koku-progress"><span id="kokuProgressText">―</span></p>
+    </div>
+
+    <div class="card sun-info">
+      <h2>太陽の刻限</h2>
+      <dl>
+        <dt>明六つ（日の出）</dt><dd id="sunriseTime">―</dd>
+        <dt>暮六つ（日の入り）</dt><dd id="sunsetTime">―</dd>
+        <dt>昼の一刻</dt><dd id="dayKokuLen">―</dd>
+        <dt>夜の一刻</dt><dd id="nightKokuLen">―</dd>
+      </dl>
+    </div>
+
+    <div class="card controls">
+      <h2>調整</h2>
+
+      <div class="control-row">
+        <label for="dateSlider">日付 <span id="dateLabel">―</span></label>
+        <input type="range" id="dateSlider" min="0" max="365" step="1">
+        <div class="season-marks">
+          <span>冬至</span><span>春分</span><span>夏至</span><span>秋分</span><span>冬至</span>
+        </div>
+      </div>
+
+      <div class="control-row buttons-row">
+        <button id="todayBtn" class="btn">今日に戻す</button>
+        <button id="playBtn" class="btn btn-accent">一日を早送り再生 ▶</button>
+      </div>
+
+      <div class="control-row">
+        <span class="control-label">場所</span>
+        <div class="location-toggle">
+          <button id="locEdoBtn" class="toggle-btn active" data-loc="edo">江戸（東京）</button>
+          <button id="locHereBtn" class="toggle-btn" data-loc="here">現在地</button>
+        </div>
+        <p id="locStatus" class="loc-status">北緯35.69°　東経139.69°</p>
+      </div>
+
+    </div>
+
+    <div class="card note">
+      <h2>不定時法とは</h2>
+      <p>
+        江戸時代の時刻制度は、日の出（明六つ）から日の入り（暮六つ）までの昼と、日の入りから日の出までの夜を、それぞれ6等分して「一刻（いっとき）」とした。そのため一刻の長さは季節や場所によって伸び縮みする。日付スライダーを動かすと、その変化を目盛りの動きで確認できる。
+      </p>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>和時計シミュレーター（学習・鑑賞用の簡易モデル）</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
