@@ -103,6 +103,10 @@
     { eto: "申", etoReading: "さる", bell: "七つ", bellNum: 7, kind: null, major: false },
   ];
 
+  // 一刻（一時）を4等分する古い呼び方。「丑三つ時（うしみつどき）」のように
+  // 十二支＋この名称＋「時」で呼んだ（例：「草木も眠る丑三つ時」＝丑の刻の3/4付近）。
+  const QUARTER_NAMES = ["一つ", "二つ", "三つ", "四つ"];
+
   const NIGHT_KOKU = [
     { eto: "酉", etoReading: "とり", bell: "六つ", bellNum: 6, kind: "暮六つ", major: false },
     { eto: "戌", etoReading: "いぬ", bell: "五つ", bellNum: 5, kind: null, major: false },
@@ -165,12 +169,21 @@
       currentIndex + 1 < boundaries.length ? boundaries[currentIndex + 1].time : followingSunrise;
     const progress = clamp((instant - current.time) / (currentEnd - current.time), 0, 1);
 
+    // 一刻（一時）をさらに4等分した「一つ時・二つ時・三つ時・四つ時」
+    // （例：「丑三つ時」）。一刻の長さそのものが季節で伸び縮みするため、
+    // 四半分もそれに合わせて実時間換算での長さが変わる。
+    const quarterIndex = clamp(Math.floor(progress * 4), 0, 3);
+    const quarterName = QUARTER_NAMES[quarterIndex];
+
     return {
       boundaries,
       followingSunrise,
       current,
       currentIndex,
+      currentEnd,
       progress,
+      quarterIndex,
+      quarterName,
       dayKokuMs,
       nightKokuMs,
       anchorSunrise,
@@ -305,19 +318,23 @@
   function renderClockFace(cycle, nowHourAngle, timeZone) {
     svg.innerHTML = "";
 
-    // 昼夜の帯（明六つ〜暮六つが昼、残りが夜）
+    // 外周の輪（土台となる文字盤の地色。先に描いておき、昼夜の帯を上から重ねる）
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring" }));
+
+    // 昼夜の帯（明六つ〜暮六つが昼、残りが夜）― 文字盤の地の上に重ねて色分けする
     const dayStartAngle = angleForHour(getLocalHourFloat(cycle.anchorSunrise, timeZone));
     const dayEndAngle = angleForHour(getLocalHourFloat(cycle.anchorSunset, timeZone));
-    svg.appendChild(el("path", { d: arcPath(0, R_ARC, 0, 360), class: "night-arc" }));
+    // 全周(0〜360度)は始点と終点が一致し弧として描画できないため、円要素で夜を塗ってから昼を重ねる
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_ARC, class: "night-arc" }));
     svg.appendChild(
       el("path", { d: arcPath(0, R_ARC, dayStartAngle, dayEndAngle), class: "day-arc" })
     );
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring-edge" }));
 
-    // 外周の輪
-    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring" }));
-
-    // 12の駒（十二支・鐘の数の目盛り）
-    cycle.boundaries.forEach((b) => {
+    // 12の駒（十二支・鐘の数の目盛り）― 昼（明六つ〜暮六つ）と夜（暮六つ〜明六つ）で色分け
+    cycle.boundaries.forEach((b, i) => {
+      const isDay = i < 6;
+      const dayNightClass = b.major ? "" : isDay ? " is-day" : " is-night";
       const hourFloat = getLocalHourFloat(b.time, timeZone);
       const angle = angleForHour(hourFloat);
       const pOut = polarToXY(R_KOMA_OUT, angle);
@@ -325,37 +342,59 @@
       svg.appendChild(
         el("line", {
           x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
-          class: `koma-line${b.major ? " is-major" : ""}`,
+          class: `koma-line${b.major ? " is-major" : ""}${dayNightClass}`,
         })
       );
       const pLabel = polarToXY(R_LABEL, angle);
-      const label = el("text", { x: pLabel.x, y: pLabel.y, class: `koma-label${b.major ? " is-major" : ""}` });
+      const label = el("text", {
+        x: pLabel.x, y: pLabel.y,
+        class: `koma-label${b.major ? " is-major" : ""}${dayNightClass}`,
+      });
       label.textContent = b.eto;
       svg.appendChild(label);
 
+      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する
+      const isRiseOrSet = b.kind === "明六つ" || b.kind === "暮六つ";
       const pSub = polarToXY(R_SUBLABEL, angle);
-      const sub = el("text", { x: pSub.x, y: pSub.y, class: "koma-sublabel" });
-      sub.textContent = b.bell;
+      const sub = el("text", {
+        x: pSub.x, y: pSub.y,
+        class: `koma-sublabel${dayNightClass}${isRiseOrSet ? " is-boundary" : ""}`,
+      });
+      sub.textContent = isRiseOrSet ? b.kind : b.bell;
       svg.appendChild(sub);
+
+      // 日の出・日の入りの位置に小さな目印（昼=暖色の丸、夜=藍色の丸）を添える
+      if (isRiseOrSet) {
+        const pMark = polarToXY(R_KOMA_OUT + 10, angle);
+        svg.appendChild(
+          el("circle", {
+            cx: pMark.x, cy: pMark.y, r: 4,
+            class: `rise-set-mark ${b.kind === "明六つ" ? "sun" : "moon"}`,
+          })
+        );
+      }
     });
 
-    // 分割線の細目（各刻をさらに視覚的に区切る補助目盛り、任意の飾り）
-    for (let i = 0; i < 48; i++) {
-      const angle = i * 7.5;
-      const isBoundaryNear = cycle.boundaries.some((b) => {
-        const ba = angleForHour(getLocalHourFloat(b.time, timeZone));
-        return Math.abs(((angle - ba + 540) % 360) - 180) < 3.75;
-      });
-      if (isBoundaryNear) continue;
-      const pOut = polarToXY(R_KOMA_OUT, angle);
-      const pIn = polarToXY(R_KOMA_OUT - 8, angle);
-      svg.appendChild(
-        el("line", {
-          x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
-          stroke: "rgba(43,38,34,0.25)", "stroke-width": 0.6,
-        })
-      );
-    }
+    // 「一つ時・二つ時・三つ時・四つ時」―― 各刻を実際に4等分した細目盛り。
+    // 一刻の長さ自体が季節・昼夜で伸び縮みするため、その内部の等分点も
+    // 固定角度ではなく、各刻の実時間を4分割して個別に角度を求める。
+    cycle.boundaries.forEach((b, i) => {
+      const isDay = i < 6;
+      const endTime = i + 1 < cycle.boundaries.length ? cycle.boundaries[i + 1].time : cycle.followingSunrise;
+      const spanMs = endTime - b.time;
+      for (let q = 1; q <= 3; q++) {
+        const t = new Date(b.time.getTime() + spanMs * (q / 4));
+        const angle = angleForHour(getLocalHourFloat(t, timeZone));
+        const pOut = polarToXY(R_KOMA_OUT, angle);
+        const pIn = polarToXY(R_KOMA_OUT - 9, angle);
+        svg.appendChild(
+          el("line", {
+            x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
+            class: `quarter-tick${isDay ? " is-day" : " is-night"}`,
+          })
+        );
+      }
+    });
 
     // 針（現在時刻を指す。二重描画で影をつける）
     const handEnd = polarToXY(R_HAND, nowHourAngle);
@@ -380,6 +419,7 @@
     $("kokuEto").textContent = `（${cycle.current.eto}の刻）`;
     const kindText = cycle.current.kind ? `${cycle.current.kind}／` : "";
     $("kokuReading").textContent = `${kindText}${cycle.current.eto}（${cycle.current.etoReading}）の刻`;
+    $("kokuQuarterLabel").textContent = `${cycle.current.eto}${cycle.quarterName}時`;
     $("kokuProgressText").textContent = `この刻の ${Math.round(cycle.progress * 100)}% が経過`;
 
     $("sunriseTime").textContent = fmtTime(sunToday.sunrise, timeZone);
@@ -410,6 +450,7 @@
       $("kokuBell").textContent = "―";
       $("kokuEto").textContent = "";
       $("kokuReading").textContent = "この地・この日は白夜／極夜のため、不定時法が定義できません。";
+      $("kokuQuarterLabel").textContent = "―";
       $("kokuProgressText").textContent = "";
       return;
     }

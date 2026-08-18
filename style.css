@@ -11,6 +11,15 @@
   --gold: #b8934a;
   --line: rgba(43, 38, 34, 0.18);
   --shadow: rgba(43, 38, 34, 0.35);
+
+  /* 昼夜の色分け（文字盤・凡例で共通使用） */
+  --day-ink: #96590f;
+  --day-arc: rgba(233, 168, 61, 0.4);
+  --day-arc-strong: rgba(224, 150, 32, 0.6);
+  --night-ink: #313868;
+  --night-arc: rgba(28, 33, 71, 0.58);
+  --night-arc-strong: rgba(20, 24, 56, 0.72);
+
   font-size: 16px;
 }
 
@@ -95,7 +104,9 @@ body {
   }
 }
 
-/* スマートフォン幅：1カラムに積む */
+/* スマートフォン幅：1カラムに積む。
+   文字盤の駒が動く様子を見ながら日付を調整できるよう、
+   「調整」カード（日付スライダー）を文字盤の直下に繰り上げる。 */
 @media (max-width: 700px) {
   .layout {
     grid-template-columns: 1fr;
@@ -103,6 +114,9 @@ body {
   }
   .clock-frame {
     max-width: 460px;
+  }
+  .controls {
+    order: -1;
   }
 }
 
@@ -172,6 +186,34 @@ body {
   letter-spacing: 0.05em;
 }
 
+.clock-legend {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.clock-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clock-legend .swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.clock-legend .legend-day .swatch {
+  background: var(--day-ink);
+}
+
+.clock-legend .legend-night .swatch {
+  background: var(--night-ink);
+}
+
 .info-panel {
   display: flex;
   flex-direction: column;
@@ -227,10 +269,22 @@ body {
   letter-spacing: 0.06em;
 }
 
-.koku-progress {
-  margin: 0.6rem 0 0;
-  font-size: 0.8rem;
+.koku-quarter {
+  margin: 0.5rem 0 0;
+  font-size: 0.83rem;
   color: var(--ink-soft);
+}
+
+.koku-quarter strong {
+  color: var(--vermillion-dark);
+  font-weight: 700;
+}
+
+.koku-progress {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  opacity: 0.85;
 }
 
 .sun-info dl {
@@ -369,7 +423,11 @@ input[type="range"] {
 /* --- SVG clock face elements (classes used by script.js) --- */
 .face-ring {
   fill: #f6ecd8;
-  stroke: rgba(43,38,34,0.2);
+}
+
+.face-ring-edge {
+  fill: none;
+  stroke: rgba(43, 38, 34, 0.25);
   stroke-width: 1;
 }
 
@@ -377,14 +435,38 @@ input[type="range"] {
   fill: var(--vermillion);
 }
 
+.quarter-tick {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  opacity: 0.4;
+}
+
+.quarter-tick.is-day {
+  stroke: var(--day-ink);
+}
+
+.quarter-tick.is-night {
+  stroke: var(--night-ink);
+}
+
 .koma-line {
   stroke: var(--ink);
   stroke-width: 1.4;
+  opacity: 0.55;
+}
+
+.koma-line.is-day {
+  stroke: var(--day-ink);
+}
+
+.koma-line.is-night {
+  stroke: var(--night-ink);
 }
 
 .koma-line.is-major {
   stroke: var(--vermillion-dark);
   stroke-width: 2;
+  opacity: 1;
 }
 
 .koma-label {
@@ -393,6 +475,14 @@ input[type="range"] {
   font-size: 15px;
   text-anchor: middle;
   dominant-baseline: middle;
+}
+
+.koma-label.is-day {
+  fill: var(--day-ink);
+}
+
+.koma-label.is-night {
+  fill: var(--night-ink);
 }
 
 .koma-label.is-major {
@@ -408,12 +498,37 @@ input[type="range"] {
   dominant-baseline: middle;
 }
 
+.koma-sublabel.is-day {
+  fill: var(--day-ink);
+}
+
+.koma-sublabel.is-night {
+  fill: var(--night-ink);
+}
+
+.koma-sublabel.is-boundary {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rise-set-mark {
+  stroke: none;
+}
+
+.rise-set-mark.sun {
+  fill: var(--day-ink);
+}
+
+.rise-set-mark.moon {
+  fill: var(--night-ink);
+}
+
 .day-arc {
-  fill: rgba(184, 147, 74, 0.18);
+  fill: var(--day-arc);
 }
 
 .night-arc {
-  fill: rgba(43, 38, 34, 0.10);
+  fill: var(--night-arc);
 }
 
 .hand {

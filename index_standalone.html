@@ -19,6 +19,15 @@
   --gold: #b8934a;
   --line: rgba(43, 38, 34, 0.18);
   --shadow: rgba(43, 38, 34, 0.35);
+
+  /* 昼夜の色分け（文字盤・凡例で共通使用） */
+  --day-ink: #96590f;
+  --day-arc: rgba(233, 168, 61, 0.4);
+  --day-arc-strong: rgba(224, 150, 32, 0.6);
+  --night-ink: #313868;
+  --night-arc: rgba(28, 33, 71, 0.58);
+  --night-arc-strong: rgba(20, 24, 56, 0.72);
+
   font-size: 16px;
 }
 
@@ -103,7 +112,9 @@ body {
   }
 }
 
-/* スマートフォン幅：1カラムに積む */
+/* スマートフォン幅：1カラムに積む。
+   文字盤の駒が動く様子を見ながら日付を調整できるよう、
+   「調整」カード（日付スライダー）を文字盤の直下に繰り上げる。 */
 @media (max-width: 700px) {
   .layout {
     grid-template-columns: 1fr;
@@ -111,6 +122,9 @@ body {
   }
   .clock-frame {
     max-width: 460px;
+  }
+  .controls {
+    order: -1;
   }
 }
 
@@ -180,6 +194,34 @@ body {
   letter-spacing: 0.05em;
 }
 
+.clock-legend {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.clock-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clock-legend .swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.clock-legend .legend-day .swatch {
+  background: var(--day-ink);
+}
+
+.clock-legend .legend-night .swatch {
+  background: var(--night-ink);
+}
+
 .info-panel {
   display: flex;
   flex-direction: column;
@@ -235,10 +277,22 @@ body {
   letter-spacing: 0.06em;
 }
 
-.koku-progress {
-  margin: 0.6rem 0 0;
-  font-size: 0.8rem;
+.koku-quarter {
+  margin: 0.5rem 0 0;
+  font-size: 0.83rem;
   color: var(--ink-soft);
+}
+
+.koku-quarter strong {
+  color: var(--vermillion-dark);
+  font-weight: 700;
+}
+
+.koku-progress {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  opacity: 0.85;
 }
 
 .sun-info dl {
@@ -377,7 +431,11 @@ input[type="range"] {
 /* --- SVG clock face elements (classes used by script.js) --- */
 .face-ring {
   fill: #f6ecd8;
-  stroke: rgba(43,38,34,0.2);
+}
+
+.face-ring-edge {
+  fill: none;
+  stroke: rgba(43, 38, 34, 0.25);
   stroke-width: 1;
 }
 
@@ -385,14 +443,38 @@ input[type="range"] {
   fill: var(--vermillion);
 }
 
+.quarter-tick {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  opacity: 0.4;
+}
+
+.quarter-tick.is-day {
+  stroke: var(--day-ink);
+}
+
+.quarter-tick.is-night {
+  stroke: var(--night-ink);
+}
+
 .koma-line {
   stroke: var(--ink);
   stroke-width: 1.4;
+  opacity: 0.55;
+}
+
+.koma-line.is-day {
+  stroke: var(--day-ink);
+}
+
+.koma-line.is-night {
+  stroke: var(--night-ink);
 }
 
 .koma-line.is-major {
   stroke: var(--vermillion-dark);
   stroke-width: 2;
+  opacity: 1;
 }
 
 .koma-label {
@@ -401,6 +483,14 @@ input[type="range"] {
   font-size: 15px;
   text-anchor: middle;
   dominant-baseline: middle;
+}
+
+.koma-label.is-day {
+  fill: var(--day-ink);
+}
+
+.koma-label.is-night {
+  fill: var(--night-ink);
 }
 
 .koma-label.is-major {
@@ -416,12 +506,37 @@ input[type="range"] {
   dominant-baseline: middle;
 }
 
+.koma-sublabel.is-day {
+  fill: var(--day-ink);
+}
+
+.koma-sublabel.is-night {
+  fill: var(--night-ink);
+}
+
+.koma-sublabel.is-boundary {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rise-set-mark {
+  stroke: none;
+}
+
+.rise-set-mark.sun {
+  fill: var(--day-ink);
+}
+
+.rise-set-mark.moon {
+  fill: var(--night-ink);
+}
+
 .day-arc {
-  fill: rgba(184, 147, 74, 0.18);
+  fill: var(--day-arc);
 }
 
 .night-arc {
-  fill: rgba(43, 38, 34, 0.10);
+  fill: var(--night-arc);
 }
 
 .hand {
@@ -456,6 +571,10 @@ input[type="range"] {
       <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
     </div>
     <p class="clock-caption">割駒式文字盤 ― 目盛りの駒が季節ごとに動きます</p>
+    <div class="clock-legend">
+      <span class="legend-item legend-day"><span class="swatch"></span>昼（明六つ〜暮六つ）</span>
+      <span class="legend-item legend-night"><span class="swatch"></span>夜（暮六つ〜明六つ）</span>
+    </div>
   </section>
 
   <section class="info-panel">
@@ -467,6 +586,7 @@ input[type="range"] {
         <span id="kokuEto" class="koku-eto">―</span>
       </div>
       <p id="kokuReading" class="koku-reading">―</p>
+      <p class="koku-quarter">一刻をさらに4つに分けると、今はおよそ「<strong id="kokuQuarterLabel">―</strong>」</p>
       <p class="koku-progress"><span id="kokuProgressText">―</span></p>
     </div>
 
@@ -511,6 +631,9 @@ input[type="range"] {
       <h2>不定時法とは</h2>
       <p>
         江戸時代の時刻制度は、日の出（明六つ）から日の入り（暮六つ）までの昼と、日の入りから日の出までの夜を、それぞれ6等分して「一刻（いっとき）」とした。そのため一刻の長さは季節や場所によって伸び縮みする。日付スライダーを動かすと、その変化を目盛りの動きで確認できる。
+      </p>
+      <p>
+        一刻（約2時間前後）はさらに細かく区切られ、半分を「半刻（はんとき）」、その半分を「四半刻（しはんとき）」と呼んだ。また一刻を「一つ時・二つ時・三つ時・四つ時」と4等分する言い方もあり、怪談で知られる「草木も眠る丑三つ時」はこの3番目の区切りを指す（丑の刻のおよそ半分〜4分の3あたり）。文字盤の細かい目盛り線は、この4等分を実際の日の出・日の入りに基づいて描いたもの。
       </p>
     </div>
 
@@ -628,6 +751,10 @@ input[type="range"] {
     { eto: "申", etoReading: "さる", bell: "七つ", bellNum: 7, kind: null, major: false },
   ];
 
+  // 一刻（一時）を4等分する古い呼び方。「丑三つ時（うしみつどき）」のように
+  // 十二支＋この名称＋「時」で呼んだ（例：「草木も眠る丑三つ時」＝丑の刻の3/4付近）。
+  const QUARTER_NAMES = ["一つ", "二つ", "三つ", "四つ"];
+
   const NIGHT_KOKU = [
     { eto: "酉", etoReading: "とり", bell: "六つ", bellNum: 6, kind: "暮六つ", major: false },
     { eto: "戌", etoReading: "いぬ", bell: "五つ", bellNum: 5, kind: null, major: false },
@@ -690,12 +817,21 @@ input[type="range"] {
       currentIndex + 1 < boundaries.length ? boundaries[currentIndex + 1].time : followingSunrise;
     const progress = clamp((instant - current.time) / (currentEnd - current.time), 0, 1);
 
+    // 一刻（一時）をさらに4等分した「一つ時・二つ時・三つ時・四つ時」
+    // （例：「丑三つ時」）。一刻の長さそのものが季節で伸び縮みするため、
+    // 四半分もそれに合わせて実時間換算での長さが変わる。
+    const quarterIndex = clamp(Math.floor(progress * 4), 0, 3);
+    const quarterName = QUARTER_NAMES[quarterIndex];
+
     return {
       boundaries,
       followingSunrise,
       current,
       currentIndex,
+      currentEnd,
       progress,
+      quarterIndex,
+      quarterName,
       dayKokuMs,
       nightKokuMs,
       anchorSunrise,
@@ -830,19 +966,23 @@ input[type="range"] {
   function renderClockFace(cycle, nowHourAngle, timeZone) {
     svg.innerHTML = "";
 
-    // 昼夜の帯（明六つ〜暮六つが昼、残りが夜）
+    // 外周の輪（土台となる文字盤の地色。先に描いておき、昼夜の帯を上から重ねる）
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring" }));
+
+    // 昼夜の帯（明六つ〜暮六つが昼、残りが夜）― 文字盤の地の上に重ねて色分けする
     const dayStartAngle = angleForHour(getLocalHourFloat(cycle.anchorSunrise, timeZone));
     const dayEndAngle = angleForHour(getLocalHourFloat(cycle.anchorSunset, timeZone));
-    svg.appendChild(el("path", { d: arcPath(0, R_ARC, 0, 360), class: "night-arc" }));
+    // 全周(0〜360度)は始点と終点が一致し弧として描画できないため、円要素で夜を塗ってから昼を重ねる
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_ARC, class: "night-arc" }));
     svg.appendChild(
       el("path", { d: arcPath(0, R_ARC, dayStartAngle, dayEndAngle), class: "day-arc" })
     );
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring-edge" }));
 
-    // 外周の輪
-    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_OUTER, class: "face-ring" }));
-
-    // 12の駒（十二支・鐘の数の目盛り）
-    cycle.boundaries.forEach((b) => {
+    // 12の駒（十二支・鐘の数の目盛り）― 昼（明六つ〜暮六つ）と夜（暮六つ〜明六つ）で色分け
+    cycle.boundaries.forEach((b, i) => {
+      const isDay = i < 6;
+      const dayNightClass = b.major ? "" : isDay ? " is-day" : " is-night";
       const hourFloat = getLocalHourFloat(b.time, timeZone);
       const angle = angleForHour(hourFloat);
       const pOut = polarToXY(R_KOMA_OUT, angle);
@@ -850,37 +990,59 @@ input[type="range"] {
       svg.appendChild(
         el("line", {
           x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
-          class: `koma-line${b.major ? " is-major" : ""}`,
+          class: `koma-line${b.major ? " is-major" : ""}${dayNightClass}`,
         })
       );
       const pLabel = polarToXY(R_LABEL, angle);
-      const label = el("text", { x: pLabel.x, y: pLabel.y, class: `koma-label${b.major ? " is-major" : ""}` });
+      const label = el("text", {
+        x: pLabel.x, y: pLabel.y,
+        class: `koma-label${b.major ? " is-major" : ""}${dayNightClass}`,
+      });
       label.textContent = b.eto;
       svg.appendChild(label);
 
+      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する
+      const isRiseOrSet = b.kind === "明六つ" || b.kind === "暮六つ";
       const pSub = polarToXY(R_SUBLABEL, angle);
-      const sub = el("text", { x: pSub.x, y: pSub.y, class: "koma-sublabel" });
-      sub.textContent = b.bell;
+      const sub = el("text", {
+        x: pSub.x, y: pSub.y,
+        class: `koma-sublabel${dayNightClass}${isRiseOrSet ? " is-boundary" : ""}`,
+      });
+      sub.textContent = isRiseOrSet ? b.kind : b.bell;
       svg.appendChild(sub);
+
+      // 日の出・日の入りの位置に小さな目印（昼=暖色の丸、夜=藍色の丸）を添える
+      if (isRiseOrSet) {
+        const pMark = polarToXY(R_KOMA_OUT + 10, angle);
+        svg.appendChild(
+          el("circle", {
+            cx: pMark.x, cy: pMark.y, r: 4,
+            class: `rise-set-mark ${b.kind === "明六つ" ? "sun" : "moon"}`,
+          })
+        );
+      }
     });
 
-    // 分割線の細目（各刻をさらに視覚的に区切る補助目盛り、任意の飾り）
-    for (let i = 0; i < 48; i++) {
-      const angle = i * 7.5;
-      const isBoundaryNear = cycle.boundaries.some((b) => {
-        const ba = angleForHour(getLocalHourFloat(b.time, timeZone));
-        return Math.abs(((angle - ba + 540) % 360) - 180) < 3.75;
-      });
-      if (isBoundaryNear) continue;
-      const pOut = polarToXY(R_KOMA_OUT, angle);
-      const pIn = polarToXY(R_KOMA_OUT - 8, angle);
-      svg.appendChild(
-        el("line", {
-          x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
-          stroke: "rgba(43,38,34,0.25)", "stroke-width": 0.6,
-        })
-      );
-    }
+    // 「一つ時・二つ時・三つ時・四つ時」―― 各刻を実際に4等分した細目盛り。
+    // 一刻の長さ自体が季節・昼夜で伸び縮みするため、その内部の等分点も
+    // 固定角度ではなく、各刻の実時間を4分割して個別に角度を求める。
+    cycle.boundaries.forEach((b, i) => {
+      const isDay = i < 6;
+      const endTime = i + 1 < cycle.boundaries.length ? cycle.boundaries[i + 1].time : cycle.followingSunrise;
+      const spanMs = endTime - b.time;
+      for (let q = 1; q <= 3; q++) {
+        const t = new Date(b.time.getTime() + spanMs * (q / 4));
+        const angle = angleForHour(getLocalHourFloat(t, timeZone));
+        const pOut = polarToXY(R_KOMA_OUT, angle);
+        const pIn = polarToXY(R_KOMA_OUT - 9, angle);
+        svg.appendChild(
+          el("line", {
+            x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
+            class: `quarter-tick${isDay ? " is-day" : " is-night"}`,
+          })
+        );
+      }
+    });
 
     // 針（現在時刻を指す。二重描画で影をつける）
     const handEnd = polarToXY(R_HAND, nowHourAngle);
@@ -905,6 +1067,7 @@ input[type="range"] {
     $("kokuEto").textContent = `（${cycle.current.eto}の刻）`;
     const kindText = cycle.current.kind ? `${cycle.current.kind}／` : "";
     $("kokuReading").textContent = `${kindText}${cycle.current.eto}（${cycle.current.etoReading}）の刻`;
+    $("kokuQuarterLabel").textContent = `${cycle.current.eto}${cycle.quarterName}時`;
     $("kokuProgressText").textContent = `この刻の ${Math.round(cycle.progress * 100)}% が経過`;
 
     $("sunriseTime").textContent = fmtTime(sunToday.sunrise, timeZone);
@@ -935,6 +1098,7 @@ input[type="range"] {
       $("kokuBell").textContent = "―";
       $("kokuEto").textContent = "";
       $("kokuReading").textContent = "この地・この日は白夜／極夜のため、不定時法が定義できません。";
+      $("kokuQuarterLabel").textContent = "―";
       $("kokuProgressText").textContent = "";
       return;
     }
