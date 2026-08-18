@@ -20,13 +20,19 @@
   --line: rgba(43, 38, 34, 0.18);
   --shadow: rgba(43, 38, 34, 0.35);
 
-  /* 昼夜の色分け（文字盤・凡例で共通使用） */
-  --day-ink: #96590f;
-  --day-arc: rgba(233, 168, 61, 0.4);
+  /* 昼夜の色分け（文字盤の帯・目盛り線・凡例で使用。文字そのものの色分けは
+     視認性を優先してやめ、常に濃色インクで統一している） */
+  --day-ink: #7a4400;
+  --day-arc: rgba(233, 168, 61, 0.32);
   --day-arc-strong: rgba(224, 150, 32, 0.6);
-  --night-ink: #313868;
-  --night-arc: rgba(28, 33, 71, 0.58);
+  --night-ink: #262c58;
+  --night-arc: rgba(28, 33, 71, 0.48);
   --night-arc-strong: rgba(20, 24, 56, 0.72);
+
+  /* 現代時計（定時法）オーバーレイ用の色 */
+  --modern-face: #eef1f5;
+  --modern-edge: #4a5262;
+  --modern-ink: #23272f;
 
   font-size: 16px;
 }
@@ -186,12 +192,19 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  cursor: pointer;
 }
 
 .clock-caption {
   font-size: 0.82rem;
   color: var(--ink-soft);
   letter-spacing: 0.05em;
+}
+
+.clock-hint {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  opacity: 0.75;
 }
 
 .clock-legend {
@@ -445,8 +458,8 @@ input[type="range"] {
 
 .quarter-tick {
   stroke: var(--ink);
-  stroke-width: 0.6;
-  opacity: 0.4;
+  stroke-width: 0.7;
+  opacity: 0.55;
 }
 
 .quarter-tick.is-day {
@@ -459,8 +472,8 @@ input[type="range"] {
 
 .koma-line {
   stroke: var(--ink);
-  stroke-width: 1.4;
-  opacity: 0.55;
+  stroke-width: 1.6;
+  opacity: 0.75;
 }
 
 .koma-line.is-day {
@@ -473,50 +486,49 @@ input[type="range"] {
 
 .koma-line.is-major {
   stroke: var(--vermillion-dark);
-  stroke-width: 2;
+  stroke-width: 2.2;
   opacity: 1;
 }
 
+/* 文字盤の文字は、下地の色（昼＝琥珀／夜＝藍）に溶け込まないよう、
+   常に濃いインク色で統一し、周囲に生成り色のハロー（縁取り）を
+   つけてどんな背景の上でも判読できるようにしている。 */
 .koma-label {
   font-family: "Shippori Mincho", serif;
+  font-weight: 700;
   fill: var(--ink);
-  font-size: 15px;
+  font-size: 19px;
   text-anchor: middle;
   dominant-baseline: middle;
-}
-
-.koma-label.is-day {
-  fill: var(--day-ink);
-}
-
-.koma-label.is-night {
-  fill: var(--night-ink);
+  paint-order: stroke;
+  stroke: #faf4e6;
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
 }
 
 .koma-label.is-major {
   fill: var(--vermillion-dark);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 21px;
 }
 
 .koma-sublabel {
   font-family: "Shippori Mincho", serif;
-  fill: var(--ink-soft);
-  font-size: 9px;
+  font-weight: 600;
+  fill: var(--ink);
+  font-size: 12px;
   text-anchor: middle;
   dominant-baseline: middle;
-}
-
-.koma-sublabel.is-day {
-  fill: var(--day-ink);
-}
-
-.koma-sublabel.is-night {
-  fill: var(--night-ink);
+  paint-order: stroke;
+  stroke: #faf4e6;
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
 }
 
 .koma-sublabel.is-boundary {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
+  fill: var(--vermillion-dark);
 }
 
 .rise-set-mark {
@@ -539,6 +551,38 @@ input[type="range"] {
   fill: var(--night-arc);
 }
 
+/* --- 現代（定時法）の24時間時計オーバーレイ --- */
+.modern-clock-face {
+  fill: var(--modern-face);
+  stroke: var(--modern-edge);
+  stroke-width: 1.5;
+}
+
+.modern-tick {
+  stroke: var(--modern-edge);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.modern-tick.is-major {
+  stroke: var(--modern-ink);
+  stroke-width: 1.6;
+  opacity: 1;
+}
+
+.modern-label {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  fill: var(--modern-ink);
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.modern-label.is-noon {
+  fill: var(--vermillion-dark);
+}
+
 .hand {
   stroke: var(--ink);
   stroke-width: 3;
@@ -554,7 +598,7 @@ input[type="range"] {
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="washi-bg"></div>
@@ -575,6 +619,7 @@ input[type="range"] {
       <span class="legend-item legend-day"><span class="swatch"></span>昼（明六つ〜暮六つ）</span>
       <span class="legend-item legend-night"><span class="swatch"></span>夜（暮六つ〜明六つ）</span>
     </div>
+    <p class="clock-hint">文字盤をクリックすると、中央に現代の24時間時計を重ねて比較できます</p>
   </section>
 
   <section class="info-panel">
@@ -903,6 +948,7 @@ input[type="range"] {
     locationMode: "edo", // 'edo' | 'here'
     dateOffsetDays: 0, // スライダーによる「今日」からの日数オフセット
     fastForward: null, // 早送り再生中の状態（null なら通常のリアルタイム表示）
+    showModernClock: false, // 文字盤クリックで、現代の24時間定時法時計を重ねて表示
   };
 
   const todayYMD = (() => {
@@ -927,7 +973,9 @@ input[type="range"] {
   const svg = document.getElementById("clockFace");
   const CX = 200, CY = 200;
   const R_OUTER = 178, R_KOMA_OUT = 178, R_KOMA_IN = 148;
-  const R_LABEL = 130, R_SUBLABEL = 100, R_ARC = 178, R_HAND = 118, R_HAND_MINOR = 78;
+  const R_LABEL = 130, R_SUBLABEL = 100, R_SUBLABEL_BOUNDARY = 160, R_ARC = 178, R_HAND = 118, R_HAND_MINOR = 78;
+  // 現代の24時間時計オーバーレイ（不定時法の文字盤と同じ中心・同じ角度基準を共有する）
+  const R_MODERN = 85, R_MODERN_TICK_MAJOR_IN = 70, R_MODERN_TICK_MINOR_IN = 77, R_MODERN_LABEL = 60;
 
   function angleForHour(hourFloat) {
     // 12時（正午）を真上(0deg)、時計回りを正の角度とする
@@ -961,6 +1009,35 @@ input[type="range"] {
     const node = document.createElementNS(SVG_NS, tag);
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
     return node;
+  }
+
+  // 現代（定時法）の24時間時計を、不定時法の文字盤と同じ中心・同じ角度基準
+  // （正午=真上、時計回り）で描く。角度基準を共有しているため、針は
+  // 描き直す必要がなく、外側の和時計と全く同じ向きを指したまま重なる。
+  function renderModernClock() {
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_MODERN, class: "modern-clock-face" }));
+    for (let h = 0; h < 24; h++) {
+      const isMajor = h % 3 === 0;
+      const angle = angleForHour(h);
+      const rIn = isMajor ? R_MODERN_TICK_MAJOR_IN : R_MODERN_TICK_MINOR_IN;
+      const pOut = polarToXY(R_MODERN, angle);
+      const pIn = polarToXY(rIn, angle);
+      svg.appendChild(
+        el("line", {
+          x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
+          class: `modern-tick${isMajor ? " is-major" : ""}`,
+        })
+      );
+      if (isMajor) {
+        const pLabel = polarToXY(R_MODERN_LABEL, angle);
+        const label = el("text", {
+          x: pLabel.x, y: pLabel.y,
+          class: `modern-label${h === 12 ? " is-noon" : ""}`,
+        });
+        label.textContent = String(h);
+        svg.appendChild(label);
+      }
+    }
   }
 
   function renderClockFace(cycle, nowHourAngle, timeZone) {
@@ -1001,9 +1078,13 @@ input[type="range"] {
       label.textContent = b.eto;
       svg.appendChild(label);
 
-      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する
+      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する。
+      // この2つは卯・酉に近い、ほぼ水平な角度になりやすく、通常の位置（R_SUBLABEL）
+      // だと横書きの文字幅が中心方向へはみ出し、中央の現代時計オーバーレイや
+      // 卯・酉の文字と重なってしまう。十二支の文字（R_LABEL）より外側、
+      // 主目盛りの輪の内側という隙間（R_SUBLABEL_BOUNDARY）に配置して両方を避ける。
       const isRiseOrSet = b.kind === "明六つ" || b.kind === "暮六つ";
-      const pSub = polarToXY(R_SUBLABEL, angle);
+      const pSub = polarToXY(isRiseOrSet ? R_SUBLABEL_BOUNDARY : R_SUBLABEL, angle);
       const sub = el("text", {
         x: pSub.x, y: pSub.y,
         class: `koma-sublabel${dayNightClass}${isRiseOrSet ? " is-boundary" : ""}`,
@@ -1043,6 +1124,12 @@ input[type="range"] {
         );
       }
     });
+
+    // 現代の24時間時計オーバーレイ（クリックでトグル）。針より先に描き、
+    // 針が両方の文字盤の上に重なって見えるようにする
+    if (state.showModernClock) {
+      renderModernClock();
+    }
 
     // 針（現在時刻を指す。二重描画で影をつける）
     const handEnd = polarToXY(R_HAND, nowHourAngle);
@@ -1264,7 +1351,16 @@ input[type="range"] {
   locHereBtn.addEventListener("click", () => setLocation("here"));
 
   /* ------------------------------------------------------------------- *
-   * 10. 初期化
+   * 10. 現代時計オーバーレイの切り替え（文字盤クリック）
+   * ------------------------------------------------------------------- */
+
+  svg.addEventListener("click", () => {
+    state.showModernClock = !state.showModernClock;
+    render(currentInstant());
+  });
+
+  /* ------------------------------------------------------------------- *
+   * 11. 初期化
    * ------------------------------------------------------------------- */
 
   dateLabel.textContent = formatSimulatedDateLabel();

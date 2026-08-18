@@ -255,6 +255,7 @@
     locationMode: "edo", // 'edo' | 'here'
     dateOffsetDays: 0, // スライダーによる「今日」からの日数オフセット
     fastForward: null, // 早送り再生中の状態（null なら通常のリアルタイム表示）
+    showModernClock: false, // 文字盤クリックで、現代の24時間定時法時計を重ねて表示
   };
 
   const todayYMD = (() => {
@@ -279,7 +280,9 @@
   const svg = document.getElementById("clockFace");
   const CX = 200, CY = 200;
   const R_OUTER = 178, R_KOMA_OUT = 178, R_KOMA_IN = 148;
-  const R_LABEL = 130, R_SUBLABEL = 100, R_ARC = 178, R_HAND = 118, R_HAND_MINOR = 78;
+  const R_LABEL = 130, R_SUBLABEL = 100, R_SUBLABEL_BOUNDARY = 160, R_ARC = 178, R_HAND = 118, R_HAND_MINOR = 78;
+  // 現代の24時間時計オーバーレイ（不定時法の文字盤と同じ中心・同じ角度基準を共有する）
+  const R_MODERN = 85, R_MODERN_TICK_MAJOR_IN = 70, R_MODERN_TICK_MINOR_IN = 77, R_MODERN_LABEL = 60;
 
   function angleForHour(hourFloat) {
     // 12時（正午）を真上(0deg)、時計回りを正の角度とする
@@ -313,6 +316,35 @@
     const node = document.createElementNS(SVG_NS, tag);
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
     return node;
+  }
+
+  // 現代（定時法）の24時間時計を、不定時法の文字盤と同じ中心・同じ角度基準
+  // （正午=真上、時計回り）で描く。角度基準を共有しているため、針は
+  // 描き直す必要がなく、外側の和時計と全く同じ向きを指したまま重なる。
+  function renderModernClock() {
+    svg.appendChild(el("circle", { cx: CX, cy: CY, r: R_MODERN, class: "modern-clock-face" }));
+    for (let h = 0; h < 24; h++) {
+      const isMajor = h % 3 === 0;
+      const angle = angleForHour(h);
+      const rIn = isMajor ? R_MODERN_TICK_MAJOR_IN : R_MODERN_TICK_MINOR_IN;
+      const pOut = polarToXY(R_MODERN, angle);
+      const pIn = polarToXY(rIn, angle);
+      svg.appendChild(
+        el("line", {
+          x1: pIn.x, y1: pIn.y, x2: pOut.x, y2: pOut.y,
+          class: `modern-tick${isMajor ? " is-major" : ""}`,
+        })
+      );
+      if (isMajor) {
+        const pLabel = polarToXY(R_MODERN_LABEL, angle);
+        const label = el("text", {
+          x: pLabel.x, y: pLabel.y,
+          class: `modern-label${h === 12 ? " is-noon" : ""}`,
+        });
+        label.textContent = String(h);
+        svg.appendChild(label);
+      }
+    }
   }
 
   function renderClockFace(cycle, nowHourAngle, timeZone) {
@@ -353,9 +385,13 @@
       label.textContent = b.eto;
       svg.appendChild(label);
 
-      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する
+      // 明六つ・暮六つ（日の出・日の入り）は名称そのものを表示して境目を明示する。
+      // この2つは卯・酉に近い、ほぼ水平な角度になりやすく、通常の位置（R_SUBLABEL）
+      // だと横書きの文字幅が中心方向へはみ出し、中央の現代時計オーバーレイや
+      // 卯・酉の文字と重なってしまう。十二支の文字（R_LABEL）より外側、
+      // 主目盛りの輪の内側という隙間（R_SUBLABEL_BOUNDARY）に配置して両方を避ける。
       const isRiseOrSet = b.kind === "明六つ" || b.kind === "暮六つ";
-      const pSub = polarToXY(R_SUBLABEL, angle);
+      const pSub = polarToXY(isRiseOrSet ? R_SUBLABEL_BOUNDARY : R_SUBLABEL, angle);
       const sub = el("text", {
         x: pSub.x, y: pSub.y,
         class: `koma-sublabel${dayNightClass}${isRiseOrSet ? " is-boundary" : ""}`,
@@ -395,6 +431,12 @@
         );
       }
     });
+
+    // 現代の24時間時計オーバーレイ（クリックでトグル）。針より先に描き、
+    // 針が両方の文字盤の上に重なって見えるようにする
+    if (state.showModernClock) {
+      renderModernClock();
+    }
 
     // 針（現在時刻を指す。二重描画で影をつける）
     const handEnd = polarToXY(R_HAND, nowHourAngle);
@@ -616,7 +658,16 @@
   locHereBtn.addEventListener("click", () => setLocation("here"));
 
   /* ------------------------------------------------------------------- *
-   * 10. 初期化
+   * 10. 現代時計オーバーレイの切り替え（文字盤クリック）
+   * ------------------------------------------------------------------- */
+
+  svg.addEventListener("click", () => {
+    state.showModernClock = !state.showModernClock;
+    render(currentInstant());
+  });
+
+  /* ------------------------------------------------------------------- *
+   * 11. 初期化
    * ------------------------------------------------------------------- */
 
   dateLabel.textContent = formatSimulatedDateLabel();
