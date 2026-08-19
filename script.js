@@ -469,8 +469,24 @@
 
     const dayLenMs = sunToday.sunset - sunToday.sunrise;
     const nightLenMs = sunTomorrow.sunrise - sunToday.sunset;
-    $("dayKokuLen").textContent = fmtDuration(dayLenMs / 6);
-    $("nightKokuLen").textContent = fmtDuration(nightLenMs / 6);
+    const dayKokuMs = dayLenMs / 6;
+    const nightKokuMs = nightLenMs / 6;
+    const dayKokuText = fmtDuration(dayKokuMs);
+    const nightKokuText = fmtDuration(nightKokuMs);
+    $("dayKokuLen").textContent = dayKokuText;
+    $("nightKokuLen").textContent = nightKokuText;
+    $("dayKokuCompact").textContent = dayKokuText.replace("約", "");
+    $("nightKokuCompact").textContent = nightKokuText.replace("約", "");
+
+    // 昼夜それぞれの一刻の長さを、合計4時間に対する比率として可視化する。
+    // 日付スライダーを動かすと文字盤と同時に伸縮し、不定時法の季節差を直感的に示す。
+    const dayRatio = (dayKokuMs / (dayKokuMs + nightKokuMs)) * 100;
+    $("dayKokuBar").style.width = `${dayRatio}%`;
+    $("nightKokuBar").style.width = `${100 - dayRatio}%`;
+    $("dayKokuBar").parentElement.setAttribute(
+      "aria-label",
+      `昼の一刻は${dayKokuText}、夜の一刻は${nightKokuText}`
+    );
   }
 
   /* ------------------------------------------------------------------- *
@@ -494,6 +510,18 @@
       $("kokuReading").textContent = "この地・この日は白夜／極夜のため、不定時法が定義できません。";
       $("kokuQuarterLabel").textContent = "―";
       $("kokuProgressText").textContent = "";
+      $("sunriseTime").textContent = "―";
+      $("sunsetTime").textContent = "―";
+      $("dayKokuLen").textContent = "―";
+      $("nightKokuLen").textContent = "―";
+      $("dayKokuCompact").textContent = "―";
+      $("nightKokuCompact").textContent = "―";
+      $("dayKokuBar").style.width = "50%";
+      $("nightKokuBar").style.width = "50%";
+      $("dayKokuBar").parentElement.setAttribute(
+        "aria-label",
+        "白夜または極夜のため、一刻の長さを比較できません"
+      );
       return;
     }
 
@@ -579,6 +607,7 @@
   const locEdoBtn = $("locEdoBtn");
   const locHereBtn = $("locHereBtn");
   const locStatus = $("locStatus");
+  const modernClockToggle = $("modernClockToggle");
 
   dateSlider.min = 0;
   dateSlider.max = daysInYear - 1;
@@ -658,13 +687,19 @@
   locHereBtn.addEventListener("click", () => setLocation("here"));
 
   /* ------------------------------------------------------------------- *
-   * 10. 現代時計オーバーレイの切り替え（文字盤クリック）
+   * 10. 現代時計オーバーレイの切り替え
    * ------------------------------------------------------------------- */
 
-  svg.addEventListener("click", () => {
+  function toggleModernClock() {
     state.showModernClock = !state.showModernClock;
+    modernClockToggle.classList.toggle("is-active", state.showModernClock);
+    modernClockToggle.setAttribute("aria-pressed", String(state.showModernClock));
     render(currentInstant());
-  });
+  }
+
+  modernClockToggle.addEventListener("click", toggleModernClock);
+  // 文字盤そのものをクリックする従来の操作も残す。
+  svg.addEventListener("click", toggleModernClock);
 
   /* ------------------------------------------------------------------- *
    * 11. 初期化
