@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>和時計 ― 不定時法シミュレーター</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236b3f2a'/%3E%3Ccircle cx='50' cy='50' r='36' fill='%23f3ead9'/%3E%3Cline x1='50' y1='50' x2='50' y2='20' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='50' y1='50' x2='68' y2='58' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20260819-11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;600;700;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="washi-bg"></div>
+<div id="animationLayer" class="animation-layer" aria-hidden="true"></div>
 
 <header class="site-header">
   <h1>和時計 <span class="sub">― 不定時法シミュレーター ―</span></h1>
@@ -21,15 +22,38 @@
 <main class="layout">
 
   <section class="clock-panel">
-    <div class="clock-frame">
-      <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
+    <div class="clock-stage">
+      <div class="clock-frame">
+        <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
+      </div>
+      <div id="eventPanels" class="event-panels" aria-live="polite" aria-label="時刻に連動する演出の案内">
+        <div class="event-panel event-panel-nw" data-event-panel></div>
+        <div class="event-panel event-panel-ne" data-event-panel></div>
+        <div class="event-panel event-panel-sw" data-event-panel></div>
+        <div class="event-panel event-panel-se" data-event-panel></div>
+      </div>
     </div>
     <p class="clock-caption">割駒式文字盤 ― 目盛りの駒が季節ごとに動きます</p>
-    <div class="clock-legend">
-      <span class="legend-item legend-day"><span class="swatch"></span>昼（明六つ〜暮六つ）</span>
-      <span class="legend-item legend-night"><span class="swatch"></span>夜（暮六つ〜明六つ）</span>
+    <div class="clock-tools">
+      <div class="clock-legend" aria-label="文字盤の昼夜の凡例">
+        <span class="legend-item legend-day"><span class="swatch"></span>昼（明六つ〜暮六つ）</span>
+        <span class="legend-item legend-night"><span class="swatch"></span>夜（暮六つ〜明六つ）</span>
+      </div>
+      <div class="clock-switches">
+        <button id="modernClockToggle" class="modern-clock-toggle" type="button" aria-pressed="false">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          現代時計
+        </button>
+        <button id="animationToggle" class="modern-clock-toggle animation-toggle is-active" type="button" aria-pressed="true">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          <span id="animationToggleLabel">演出 ON</span>
+        </button>
+        <button id="bellToggle" class="modern-clock-toggle bell-toggle" type="button" aria-pressed="false">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          <span id="bellToggleLabel">鐘 OFF</span>
+        </button>
+      </div>
     </div>
-    <p class="clock-hint">文字盤をクリックすると、中央に現代の24時間時計を重ねて比較できます</p>
   </section>
 
   <section class="info-panel">
@@ -64,6 +88,20 @@
         <div class="season-marks">
           <span>冬至</span><span>春分</span><span>夏至</span><span>秋分</span><span>冬至</span>
         </div>
+        <div class="koku-balance">
+          <div class="koku-balance-heading">
+            <span>一刻の伸び縮み</span>
+            <small>日付を動かして比べる</small>
+          </div>
+          <div class="koku-balance-bar" role="img" aria-label="昼と夜の一刻の長さの比較">
+            <span id="dayKokuBar" class="koku-balance-day"></span>
+            <span id="nightKokuBar" class="koku-balance-night"></span>
+          </div>
+          <div class="koku-balance-values">
+            <span class="balance-day"><i></i>昼 <strong id="dayKokuCompact">―</strong></span>
+            <span class="balance-night"><i></i>夜 <strong id="nightKokuCompact">―</strong></span>
+          </div>
+        </div>
       </div>
 
       <div class="control-row buttons-row">
@@ -82,16 +120,18 @@
 
     </div>
 
-    <div class="card note">
-      <h2>不定時法とは</h2>
+  </section>
+
+  <section class="note" aria-labelledby="aboutWadokei">
+      <h2 id="aboutWadokei">不定時法とは</h2>
+      <div class="note-copy">
       <p>
         江戸時代の時刻制度は、日の出（明六つ）から日の入り（暮六つ）までの昼と、日の入りから日の出までの夜を、それぞれ6等分して「一刻（いっとき）」とした。そのため一刻の長さは季節や場所によって伸び縮みする。日付スライダーを動かすと、その変化を目盛りの動きで確認できる。
       </p>
       <p>
         一刻（約2時間前後）はさらに細かく区切られ、半分を「半刻（はんとき）」、その半分を「四半刻（しはんとき）」と呼んだ。また一刻を「一つ時・二つ時・三つ時・四つ時」と4等分する言い方もあり、怪談で知られる「草木も眠る丑三つ時」はこの3番目の区切りを指す（丑の刻のおよそ半分〜4分の3あたり）。文字盤の細かい目盛り線は、この4等分を実際の日の出・日の入りに基づいて描いたもの。
       </p>
-    </div>
-
+      </div>
   </section>
 
 </main>
@@ -100,6 +140,6 @@
   <p>和時計シミュレーター（学習・鑑賞用の簡易モデル）</p>
 </footer>
 
-<script src="script.js"></script>
+<script src="script.js?v=20260819-9"></script>
 </body>
 </html>

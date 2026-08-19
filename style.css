@@ -14,12 +14,12 @@
 
   /* 昼夜の色分け（文字盤の帯・目盛り線・凡例で使用。文字そのものの色分けは
      視認性を優先してやめ、常に濃色インクで統一している） */
-  --day-ink: #7a4400;
-  --day-arc: rgba(233, 168, 61, 0.32);
-  --day-arc-strong: rgba(224, 150, 32, 0.6);
-  --night-ink: #262c58;
-  --night-arc: rgba(28, 33, 71, 0.48);
-  --night-arc-strong: rgba(20, 24, 56, 0.72);
+  --day-ink: #9a5b12;
+  --day-arc: rgba(218, 174, 96, 0.58);
+  --day-arc-strong: rgba(190, 128, 35, 0.78);
+  --night-ink: #27345f;
+  --night-arc: rgba(66, 77, 117, 0.58);
+  --night-arc-strong: rgba(38, 48, 91, 0.82);
 
   /* 現代時計（定時法）オーバーレイ用の色 */
   --modern-face: #eef1f5;
@@ -39,7 +39,7 @@ html, body {
 }
 
 body {
-  font-family: "Shippori Mincho", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   color: var(--ink);
   background-color: var(--washi);
   min-height: 100vh;
@@ -69,6 +69,7 @@ body {
   letter-spacing: 0.12em;
   font-weight: 800;
   color: var(--ink);
+  font-family: "Shippori Mincho", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
 }
 
 .site-header h1 .sub {
@@ -78,6 +79,7 @@ body {
   color: var(--ink-soft);
   letter-spacing: 0.08em;
   margin-top: 0.4rem;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
 }
 
 .lead {
@@ -99,76 +101,91 @@ body {
   align-items: start;
 }
 
-/* タブレット幅：2カラムは維持しつつ、詰めて収める */
-@media (max-width: 980px) {
-  .layout {
-    grid-template-columns: minmax(280px, 380px) minmax(240px, 340px);
-    gap: 1.5rem;
-  }
-  .clock-frame {
-    max-width: 340px;
-  }
-}
-
-/* スマートフォン幅：1カラムに積む。
-   文字盤の駒が動く様子を見ながら日付を調整できるよう、
-   「調整」カード（日付スライダー）を文字盤の直下に繰り上げる。 */
-@media (max-width: 700px) {
-  .layout {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-  .clock-frame {
-    max-width: 460px;
-  }
-  .controls {
-    order: -1;
-  }
-}
-
-/* 横向き（ランドスケープ）のスマートフォンなど、縦が狭い場合は
-   1カラムだと縦スクロールが過大になるため、幅に余裕がなくても
-   2カラムを維持して画面内に収める */
-@media (max-height: 500px) and (orientation: landscape) {
-  .site-header {
-    padding: 1rem 1rem 0.6rem;
-  }
-  .lead {
-    display: none;
-  }
-  .layout {
-    grid-template-columns: minmax(240px, 320px) minmax(220px, 320px);
-    gap: 1.2rem;
-    padding-top: 0.4rem;
-  }
-  .clock-frame {
-    max-width: 300px;
-  }
-  .card {
-    padding: 0.8rem 1rem;
-  }
-}
-
 .clock-panel {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.8rem;
 }
 
-.clock-frame {
+.clock-stage {
+  position: relative;
   width: 100%;
   max-width: 460px;
   aspect-ratio: 1 / 1;
+}
+
+.clock-frame {
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 32% 28%, var(--wood-light), var(--wood) 55%, var(--wood-dark) 100%);
-  padding: 18px;
+    radial-gradient(circle at 34% 30%, #81543a, var(--wood) 58%, var(--wood-dark) 100%);
+  padding: 16px;
   box-shadow:
-    0 18px 40px var(--shadow),
-    inset 0 0 0 3px rgba(184, 147, 74, 0.5),
-    inset 0 0 24px rgba(0,0,0,0.35);
+    0 12px 26px rgba(43, 38, 34, 0.2),
+    inset 0 0 0 1px rgba(184, 147, 74, 0.55),
+    inset 0 0 16px rgba(0,0,0,0.28);
   position: relative;
+}
+
+.event-panels {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.event-panel {
+  position: absolute;
+  width: min(34%, 145px);
+  min-height: 54px;
+  padding: 0.42rem 0.52rem;
+  border: 1px solid color-mix(in srgb, var(--event-color, var(--vermillion)) 45%, transparent);
+  border-left: 3px solid var(--event-color, var(--vermillion));
+  border-radius: 5px;
+  background: rgba(250, 245, 234, 0.92);
+  box-shadow: 0 5px 16px rgba(43, 38, 34, 0.16);
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(5px) scale(0.96);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.event-panel.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.event-panel-nw { top: 3%; left: 1%; }
+.event-panel-ne { top: 3%; right: 1%; }
+.event-panel-sw { bottom: 3%; left: 1%; }
+.event-panel-se { right: 1%; bottom: 3%; }
+
+.event-panel-kicker,
+.event-panel time {
+  display: block;
+  color: var(--ink-soft);
+  font: 500 0.62rem/1.3 "Noto Sans JP", "Yu Gothic", sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.event-panel strong {
+  display: block;
+  overflow: hidden;
+  font: 700 0.76rem/1.35 "Shippori Mincho", "Yu Mincho", serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-panel time {
+  margin-top: 0.1rem;
+  color: var(--event-color, var(--vermillion));
+  font-weight: 700;
 }
 
 .clock-frame::before {
@@ -176,7 +193,7 @@ body {
   position: absolute;
   inset: 8px;
   border-radius: 50%;
-  border: 2px solid rgba(184, 147, 74, 0.35);
+  border: 1px solid rgba(196, 161, 91, 0.55);
   pointer-events: none;
 }
 
@@ -188,15 +205,27 @@ body {
 }
 
 .clock-caption {
+  margin: 0;
   font-size: 0.82rem;
   color: var(--ink-soft);
   letter-spacing: 0.05em;
 }
 
-.clock-hint {
-  font-size: 0.76rem;
-  color: var(--ink-soft);
-  opacity: 0.75;
+.clock-tools {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+
+.clock-switches {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .clock-legend {
@@ -204,6 +233,274 @@ body {
   gap: 1.2rem;
   font-size: 0.8rem;
   color: var(--ink-soft);
+}
+
+.modern-clock-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 34px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(43, 38, 34, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 252, 245, 0.5);
+  color: var(--ink-soft);
+  font: 500 0.76rem/1.2 "Noto Sans JP", "Yu Gothic", sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.toggle-indicator {
+  width: 1.65rem;
+  height: 0.92rem;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(43, 38, 34, 0.24);
+  transition: background-color 0.15s ease;
+}
+
+.toggle-indicator::after {
+  content: "";
+  display: block;
+  width: 0.67rem;
+  height: 0.67rem;
+  border-radius: 50%;
+  background: #fffaf0;
+  box-shadow: 0 1px 2px rgba(43, 38, 34, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.modern-clock-toggle.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--washi);
+}
+
+.modern-clock-toggle.is-active .toggle-indicator {
+  background: var(--vermillion);
+}
+
+.modern-clock-toggle.is-active .toggle-indicator::after {
+  transform: translateX(0.73rem);
+}
+
+/* --- 時刻に連動する季節演出レイヤー --- */
+.animation-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.zodiac-crossing {
+  --travel-y: 43vh;
+  position: absolute;
+  top: var(--travel-y);
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  transform: translate3d(-230px, 0, 0);
+  filter: drop-shadow(0 7px 7px rgba(43, 38, 34, 0.22));
+  animation: zodiac-travel 14s cubic-bezier(0.25, 0.52, 0.35, 0.96) forwards;
+  will-change: transform, opacity;
+}
+
+.zodiac-sprite {
+  width: clamp(116px, 14vw, 180px);
+  aspect-ratio: 384 / 341;
+  background-image: url("assets/zodiac-sprites.png?v=20260819-2");
+  background-repeat: no-repeat;
+  background-size: 400% 300%;
+  background-position: var(--sprite-x) var(--sprite-y);
+}
+
+.zodiac-crossing.is-fast {
+  animation-duration: 5s;
+}
+
+.ambient-event {
+  position: absolute;
+  inset: 0;
+}
+
+.ambient-event.is-fast .ambient-particle {
+  animation-duration: var(--fast-duration, 2.72s) !important;
+  animation-delay: var(--fast-delay, 0s) !important;
+}
+
+.ambient-event.is-fast .ambient-traveler,
+.ambient-event.is-fast .ambient-bloom {
+  animation-duration: var(--fast-duration, 2.72s);
+  animation-delay: var(--fast-delay, 0s);
+}
+
+.ambient-event.is-fast.ambient-lightning,
+.ambient-event.is-fast.ambient-lightning::before,
+.ambient-event.is-fast.ambient-lightning::after,
+.ambient-event.is-fast .ambient-bolt {
+  animation-duration: 1.92s;
+}
+
+.ambient-particle {
+  position: absolute;
+  left: var(--x);
+  top: -12vh;
+  color: var(--particle-color, var(--ink-soft));
+  font: 600 var(--size, 1.15rem)/1 serif;
+  opacity: 0;
+  text-shadow: 0 1px 2px rgba(43, 38, 34, 0.16);
+  animation: particle-fall var(--duration, 5s) linear var(--delay, 0s) forwards;
+  will-change: transform, opacity;
+}
+
+.ambient-event.is-swarm .ambient-particle {
+  top: var(--y);
+  left: -10vw;
+  animation-name: swarm-flight;
+  animation-timing-function: ease-in-out;
+}
+
+.ambient-traveler {
+  --travel-y: 68vh;
+  position: absolute;
+  top: var(--travel-y);
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ink);
+  transform: translate3d(-240px, 0, 0);
+  animation: ambient-travel var(--actor-duration, 13s) ease-in-out var(--actor-delay, 0s) forwards;
+  filter: drop-shadow(0 5px 5px rgba(43, 38, 34, 0.18));
+}
+
+.ambient-traveler.is-rolling .ambient-glyph {
+  animation: barrel-roll 1.1s linear infinite;
+}
+
+.ambient-glyph {
+  display: block;
+  font: 700 clamp(2.1rem, 5vw, 4.4rem)/1 "Shippori Mincho", serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ambient-bloom {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  justify-items: center;
+  color: var(--motif-color, var(--ink));
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.45);
+  animation: motif-bloom var(--actor-duration, 9.6s) ease-out var(--actor-delay, 0s) forwards;
+}
+
+.ambient-bloom .ambient-glyph {
+  font-size: clamp(1.9rem, 3.5vw, 3.2rem);
+}
+
+.ambient-lightning {
+  position: absolute;
+  inset: 0;
+  background: rgba(236, 221, 151, 0);
+  animation: lightning-flash 2.8s ease-out forwards;
+}
+
+.ambient-lightning::before,
+.ambient-lightning::after {
+  content: "";
+  position: absolute;
+  top: -8vh;
+  left: var(--bolt-x, 58vw);
+  width: 4px;
+  height: 72vh;
+  background: linear-gradient(to bottom, rgba(255,255,230,0.95), rgba(184,147,74,0.75), transparent);
+  clip-path: polygon(45% 0, 100% 0, 58% 44%, 100% 44%, 0 100%, 35% 56%, 0 56%);
+  opacity: 0;
+  animation: bolt-strike 2.4s ease-out forwards;
+}
+
+.ambient-bolt {
+  position: absolute;
+  top: -8vh;
+  left: var(--bolt-x, 50vw);
+  width: 4px;
+  height: 60vh;
+  background: linear-gradient(to bottom, rgba(255,255,230,0.95), rgba(184,147,74,0.75), transparent);
+  clip-path: polygon(45% 0, 100% 0, 58% 44%, 100% 44%, 0 100%, 35% 56%, 0 56%);
+  opacity: 0;
+  animation: bolt-strike 2.4s ease-out var(--bolt-delay, 0s) forwards;
+}
+
+.ambient-lightning::after {
+  left: calc(var(--bolt-x, 58vw) + 10vw);
+  height: 48vh;
+  animation-delay: var(--flash-delay-b, 0.16s);
+}
+
+.ambient-lightning::before {
+  animation-delay: var(--flash-delay-a, 0s);
+}
+
+@keyframes zodiac-travel {
+  0% { transform: translate3d(-230px, 0, 0) scale(0.92); opacity: 0; }
+  8% { opacity: 1; }
+  45% { transform: translate3d(44vw, -12px, 0) scale(1); opacity: 1; }
+  52% { transform: translate3d(50vw, 0, 0) scale(1); }
+  92% { opacity: 1; }
+  100% { transform: translate3d(calc(100vw + 40px), -5px, 0) scale(0.96); opacity: 0; }
+}
+
+@keyframes particle-fall {
+  0% { transform: translate3d(0, -8vh, 0) rotate(0deg) scale(0.8); opacity: 0; }
+  12% { opacity: 0.92; }
+  78% { opacity: 0.82; }
+  100% { transform: translate3d(var(--drift, 8vw), 116vh, 0) rotate(var(--rotation, 430deg)) scale(1.05); opacity: 0; }
+}
+
+@keyframes swarm-flight {
+  0% { transform: translate3d(-8vw, 0, 0) rotate(-8deg); opacity: 0; }
+  12% { opacity: 0.9; }
+  35% { transform: translate3d(var(--swarm-mid-x, 36vw), var(--swarm-rise, -5vh), 0) rotate(7deg); }
+  62% { transform: translate3d(68vw, var(--swarm-late-y, 4vh), 0) rotate(-5deg); opacity: 0.9; }
+  100% { transform: translate3d(120vw, var(--swarm-end-y, -2vh), 0) rotate(8deg); opacity: 0; }
+}
+
+@keyframes ambient-travel {
+  0% { transform: translate3d(-250px, 0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  48% { transform: translate3d(var(--travel-mid-x, 48vw), var(--travel-rise, -8px), 0); }
+  54% { transform: translate3d(calc(var(--travel-mid-x, 48vw) + 6vw), 0, 0); }
+  90% { opacity: 0.9; }
+  100% { transform: translate3d(calc(100vw + 80px), var(--travel-end-y, -4px), 0); opacity: 0; }
+}
+
+@keyframes motif-bloom {
+  0% { transform: translate(-50%, -50%) scale(0.4) rotate(-7deg); opacity: 0; }
+  18% { transform: translate(-50%, -50%) scale(1.04) rotate(2deg); opacity: 0.94; }
+  65% { transform: translate(-50%, -54%) scale(1) rotate(0deg); opacity: 0.9; }
+  100% { transform: translate(-50%, var(--bloom-rise, -68%)) scale(0.88) rotate(var(--bloom-tilt, 5deg)); opacity: 0; }
+}
+
+@keyframes lightning-flash {
+  0%, 18%, 38%, 100% { background-color: rgba(236, 221, 151, 0); }
+  10% { background-color: rgba(255, 250, 216, 0.28); }
+  28% { background-color: rgba(255, 250, 216, 0.16); }
+}
+
+@keyframes bolt-strike {
+  0%, 8% { opacity: 0; transform: scaleY(0.2); transform-origin: top; }
+  16%, 28% { opacity: 0.92; transform: scaleY(1); }
+  22%, 100% { opacity: 0; }
+}
+
+@keyframes barrel-roll {
+  to { transform: rotate(360deg); }
 }
 
 .clock-legend .legend-item {
@@ -228,6 +525,8 @@ body {
 }
 
 .info-panel {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -235,25 +534,34 @@ body {
 }
 
 .card {
-  background: rgba(255, 252, 245, 0.72);
+  background: rgba(255, 252, 245, 0.46);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 1.1rem 1.3rem;
-  box-shadow: 0 4px 14px rgba(43, 38, 34, 0.06);
+  box-shadow: none;
 }
 
 .card h2 {
   margin: 0 0 0.7rem;
   font-size: 0.92rem;
   letter-spacing: 0.1em;
-  color: var(--vermillion-dark);
+  color: var(--ink);
   font-weight: 600;
   border-bottom: 1px solid var(--line);
   padding-bottom: 0.45rem;
+  font-family: "Shippori Mincho", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
 }
 
 .current-koku {
   text-align: center;
+  background: rgba(255, 252, 245, 0.82);
+  border-color: rgba(142, 54, 32, 0.26);
+  border-top: 3px solid var(--vermillion);
+  box-shadow: 0 7px 18px rgba(43, 38, 34, 0.08);
+}
+
+.current-koku h2 {
+  color: var(--vermillion-dark);
 }
 
 .koku-display {
@@ -261,6 +569,11 @@ body {
   align-items: baseline;
   justify-content: center;
   gap: 0.6rem;
+}
+
+.koku-bell,
+.koku-eto {
+  font-family: "Shippori Mincho", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
 }
 
 .koku-bell {
@@ -291,6 +604,7 @@ body {
 .koku-quarter strong {
   color: var(--vermillion-dark);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .koku-progress {
@@ -355,6 +669,84 @@ input[type="range"] {
   margin-top: 0.2rem;
 }
 
+.koku-balance {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.koku-balance-heading,
+.koku-balance-values {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.koku-balance-heading {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.koku-balance-heading small {
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 400;
+}
+
+.koku-balance-bar {
+  display: flex;
+  height: 7px;
+  margin: 0.5rem 0 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(43, 38, 34, 0.1);
+}
+
+.koku-balance-day,
+.koku-balance-night {
+  transition: width 0.18s ease;
+}
+
+.koku-balance-day {
+  background: var(--day-ink);
+}
+
+.koku-balance-night {
+  background: var(--night-ink);
+}
+
+.koku-balance-values {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.koku-balance-values span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.koku-balance-values i {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+}
+
+.balance-day i {
+  background: var(--day-ink);
+}
+
+.balance-night i {
+  background: var(--night-ink);
+}
+
+.koku-balance-values strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .buttons-row {
   display: flex;
   gap: 0.6rem;
@@ -367,7 +759,7 @@ input[type="range"] {
   border: 1px solid var(--line);
   background: var(--washi-dark);
   color: var(--ink);
-  font-family: inherit;
+  font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -401,7 +793,7 @@ input[type="range"] {
   border: 1px solid var(--line);
   background: var(--washi-dark);
   color: var(--ink-soft);
-  font-family: inherit;
+  font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
   font-size: 0.82rem;
   cursor: pointer;
 }
@@ -418,10 +810,30 @@ input[type="range"] {
   color: var(--ink-soft);
 }
 
+.note {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 1.6rem 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.note h2 {
+  margin: 0 0 0.9rem;
+  color: var(--ink);
+  font: 600 1rem/1.5 "Shippori Mincho", "Zen Old Mincho", serif;
+  letter-spacing: 0.1em;
+}
+
+.note-copy {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
 .note p {
   margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.85;
+  font-size: 0.84rem;
+  line-height: 1.9;
   color: var(--ink-soft);
 }
 
@@ -577,12 +989,181 @@ input[type="range"] {
 
 .hand {
   stroke: var(--ink);
-  stroke-width: 3;
+  stroke-width: 3.5;
   stroke-linecap: round;
 }
 
 .hand-shadow {
   stroke: rgba(0,0,0,0.25);
-  stroke-width: 4;
+  stroke-width: 5;
   stroke-linecap: round;
+}
+
+/* タブレット幅：説明を全幅に置き、2カラムの情報量を均衡させる。 */
+@media (max-width: 980px) {
+  .site-header {
+    padding-top: 2rem;
+  }
+
+  .layout {
+    grid-template-columns: minmax(280px, 1fr) minmax(300px, 1fr);
+    gap: 1.5rem;
+  }
+
+  .clock-frame {
+    max-width: 360px;
+  }
+
+  .clock-tools {
+    max-width: 360px;
+  }
+}
+
+/* スマートフォンでは、文字盤を見ながら日付を動かす学習導線を優先する。 */
+@media (max-width: 700px) {
+  .site-header {
+    padding: 1.35rem 0.9rem 0.65rem;
+  }
+
+  .site-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .site-header h1 .sub {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  .lead {
+    margin-top: 0.55rem;
+    font-size: 0.84rem;
+    line-height: 1.65;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 1rem;
+    padding: 0.55rem 1rem 2.4rem;
+  }
+
+  .clock-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .info-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .note {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .clock-panel {
+    gap: 0.6rem;
+  }
+
+  .clock-frame {
+    width: min(82vw, 320px);
+    padding: 13px;
+  }
+
+  .clock-caption {
+    font-size: 0.76rem;
+  }
+
+  .clock-tools {
+    gap: 0.55rem;
+  }
+
+  .clock-switches {
+    gap: 0.35rem;
+  }
+
+  .clock-legend {
+    gap: 0.8rem;
+    font-size: 0.74rem;
+  }
+
+  .modern-clock-toggle {
+    min-height: 32px;
+    font-size: 0.73rem;
+  }
+
+  .zodiac-crossing {
+    --travel-y: 34vh;
+  }
+
+  .zodiac-sprite {
+    width: 112px;
+  }
+
+  .event-panel {
+    width: 36%;
+    min-height: 46px;
+    padding: 0.34rem 0.4rem;
+  }
+
+  .event-panel-kicker,
+  .event-panel time {
+    font-size: 0.55rem;
+  }
+
+  .event-panel strong {
+    font-size: 0.66rem;
+  }
+
+  .ambient-traveler {
+    --travel-y: 72vh;
+  }
+
+  .controls {
+    order: -1;
+  }
+
+  .card {
+    padding: 1rem 1.05rem;
+  }
+
+  .note {
+    padding-top: 1.25rem;
+  }
+
+  .buttons-row {
+    gap: 0.5rem;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding-inline: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* 横向きのスマートフォンは2カラムを維持して操作範囲を収める。 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .site-header {
+    padding: 0.8rem 1rem 0.4rem;
+  }
+
+  .lead {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: minmax(240px, 320px) minmax(260px, 1fr);
+    gap: 1.2rem;
+    padding-top: 0.35rem;
+  }
+
+  .clock-frame {
+    max-width: 285px;
+  }
+
+  .card {
+    padding: 0.8rem 1rem;
+  }
 }
