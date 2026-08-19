@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>和時計 ― 不定時法シミュレーター</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236b3f2a'/%3E%3Ccircle cx='50' cy='50' r='36' fill='%23f3ead9'/%3E%3Cline x1='50' y1='50' x2='50' y2='20' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='50' y1='50' x2='68' y2='58' stroke='%232b2622' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=20260819-4">
+<link rel="stylesheet" href="style.css?v=20260819-11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;600;700;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="washi-bg"></div>
+<div id="animationLayer" class="animation-layer" aria-hidden="true"></div>
 
 <header class="site-header">
   <h1>和時計 <span class="sub">― 不定時法シミュレーター ―</span></h1>
@@ -21,8 +22,16 @@
 <main class="layout">
 
   <section class="clock-panel">
-    <div class="clock-frame">
-      <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
+    <div class="clock-stage">
+      <div class="clock-frame">
+        <svg id="clockFace" viewBox="0 0 400 400" role="img" aria-label="和時計文字盤"></svg>
+      </div>
+      <div id="eventPanels" class="event-panels" aria-live="polite" aria-label="時刻に連動する演出の案内">
+        <div class="event-panel event-panel-nw" data-event-panel></div>
+        <div class="event-panel event-panel-ne" data-event-panel></div>
+        <div class="event-panel event-panel-sw" data-event-panel></div>
+        <div class="event-panel event-panel-se" data-event-panel></div>
+      </div>
     </div>
     <p class="clock-caption">割駒式文字盤 ― 目盛りの駒が季節ごとに動きます</p>
     <div class="clock-tools">
@@ -30,10 +39,20 @@
         <span class="legend-item legend-day"><span class="swatch"></span>昼（明六つ〜暮六つ）</span>
         <span class="legend-item legend-night"><span class="swatch"></span>夜（暮六つ〜明六つ）</span>
       </div>
-      <button id="modernClockToggle" class="modern-clock-toggle" type="button" aria-pressed="false">
-        <span class="toggle-indicator" aria-hidden="true"></span>
-        現代時計を重ねる
-      </button>
+      <div class="clock-switches">
+        <button id="modernClockToggle" class="modern-clock-toggle" type="button" aria-pressed="false">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          現代時計
+        </button>
+        <button id="animationToggle" class="modern-clock-toggle animation-toggle is-active" type="button" aria-pressed="true">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          <span id="animationToggleLabel">演出 ON</span>
+        </button>
+        <button id="bellToggle" class="modern-clock-toggle bell-toggle" type="button" aria-pressed="false">
+          <span class="toggle-indicator" aria-hidden="true"></span>
+          <span id="bellToggleLabel">鐘 OFF</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -121,6 +140,6 @@
   <p>和時計シミュレーター（学習・鑑賞用の簡易モデル）</p>
 </footer>
 
-<script src="script.js?v=20260819-3"></script>
+<script src="script.js?v=20260819-9"></script>
 </body>
 </html>
